@@ -21,15 +21,20 @@
     - name: 'Instalando todos os pacotes necessários para o WordPress'
       yum:
         name:
-        - unzip
         - httpd
-        - tar
         - mysql-server
         - php
         - php-gd
         - python3-PyMySQL
         - php-mysqlnd
         state: present
+
+    - name: 'Instalando pacotes necessários para descompactar o arquivo do WordPress latest.tar.gz'
+      yum:
+        name:
+        - unzip
+        - tar
+        state: present 
 
     - name: 'Liberando porta 80 no Firewall' 
       firewalld:
@@ -42,10 +47,10 @@
         name: firewalld
         state: restarted
    
-    - name: 'Habilitando o serviço do MariaDB na inicialização do Sistema'
+    - name: 'Habilitando o serviço do MySQL na inicialização do sistema'
       service: name=mysqld state=started enabled=true
 
-    - name: 'Habilitando o serviço do Apache na inicialização do Sistema'
+    - name: 'Habilitando o serviço do Apache na inicialização do sistema'
       service: name=httpd state=started enabled=true
 
     - name: 'Criando o banco Wordpress no MySQL'
@@ -70,7 +75,7 @@
         dest: /root/wordpress.tar.gz
       become: yes
         
-    - name: 'Descompactando  o arquivo do wordpress.tar.gz'
+    - name: 'Descompactando o arquivo do wordpress.tar.gz'
       unarchive:
         src: /root/wordpress.tar.gz
         dest: /root
