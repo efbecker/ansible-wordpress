@@ -1,0 +1,116 @@
+--- # Wordpress no CentOS 8 - 1905
+ - hosts: servidores
+   tasks:
+    - name: 'Instalando repositorio epel-release'
+      yum: 
+        name: epel-release 
+        state: latest
+      become: yes
+    
+    - name: 'Atualizando todos os pacotes do  CentOS'
+      yum: name=* state=latest
+
+    - name: 'Desativando o SELinux'
+      selinux:
+        policy: targeted
+        state: disabled        
+
+    - name: 'Reiniciando o sistema depois das atualizaçôes'
+      reboot:
+
+    - name: 'Instalando todos os pacotes necessários para o WordPress'
+      yum:
+        name:
+        - unzip
+        - httpd
+        - tar
+        - mysql-server
+        - php
+        - php-gd
+        - python3-PyMySQL
+        - php-mysqlnd
+        state: present
+
+    - name: 'Liberando porta 80 no Firewall' 
+      firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+
+    - name: 'Restartando o  serviço do Firewalld'
+      service:
+        name: firewalld
+        state: restarted
+   
+    - name: 'Habilitando o serviço do MariaDB na inicialização do Sistema'
+      service: name=mysqld state=started enabled=true
+
+    - name: 'Habilitando o serviço do Apache na inicialização do Sistema'
+      service: name=httpd state=started enabled=true
+
+    - name: 'Criando o banco Wordpress no MySQL'
+      mysql_db:
+        login_user: root
+        login_password: ''
+        name: wordpress
+        state: present
+
+    - name: 'Criando o usuario wp_admin no MySQL para acesso ao banco Wordpress'
+      mysql_user:
+        login_user: root
+        login_password:
+        name: wp_admin
+        password: teste12345
+        priv: '*.*:ALL'
+        state: present
+
+    - name: 'Baixa o arquivo de instalacao do Wordpress'
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
+        dest: /root/wordpress.tar.gz
+      become: yes
+        
+    - name: 'Descompactando  o arquivo do wordpress.tar.gz'
+      unarchive:
+        src: /root/wordpress.tar.gz
+        dest: /root
+        remote_src: yes
+      become: yes
+
+    - name: 'Copiando os arquivos do Wordpress para a pasta html'
+      copy:
+        src: /root/wordpress
+        dest: /var/www/html
+        remote_src: yes
+      become: yes
+
+    - name: 'Copiando arquivo de exemplo para configuração do Wordpress'
+      copy:
+        src: /var/www/html/wordpress/wp-config-sample.php
+        dest: /var/www/html/wordpress/wp-config.php
+        remote_src: yes
+      become: yes
+
+    - name: 'Configurando o wp-config para acessar o banco de dados Wordpress'     
+      replace:
+        path: '/var/www/html/wordpress/wp-config.php'
+        regexp: "{{ item.regex }}"
+        replace: "{{ item.value }}"
+        backup: yes
+      with_items:
+        - { regex: 'database_name_here', value: 'wordpress'}
+        - { regex: 'username_here', value: 'wp_admin'}
+        - { regex: 'password_here', value: 'teste12345'}
+      become: yes
+
+    - name: 'Copiando arquivo de configuração de VirtualHosts para o WordPress'
+      copy:
+        src: 'wp.conf'
+        dest: '/etc/httpd/conf.d/'
+      become: yes
+
+    - name: 'Reiniciando o serviço do Apache'
+      service:
+        name: httpd
+        state: restarted
+
