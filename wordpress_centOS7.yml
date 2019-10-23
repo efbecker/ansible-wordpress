@@ -10,19 +10,25 @@
     - name: 'Atualizando todos os pacotes do  CentOS'
       yum: name=* state=latest
 
+    - name: 'Desativando o SELinux'
+      selinux:
+        policy: targeted
+        state: disabled        
+
     - name: 'Reiniciando o sistema depois das atualizaçôes'
       reboot:
 
     - name: 'Instalando todos os pacotes necessários para o WordPress'
       yum:
         name:
-        - wget
+        - unzip
         - httpd
-        - httpd-tools
-        - mariadb-server
+        - tar
+        - mysql-server
         - php
         - php-gd
-        - MySQL-python
+        - python3-PyMySQL
+        - php-mysqlnd
         state: present
 
     - name: 'Liberando porta 80 no Firewall' 
@@ -37,7 +43,7 @@
         state: restarted
    
     - name: 'Habilitando o serviço do MariaDB na inicialização do Sistema'
-      service: name=mariadb state=started enabled=true
+      service: name=mysqld state=started enabled=true
 
     - name: 'Habilitando o serviço do Apache na inicialização do Sistema'
       service: name=httpd state=started enabled=true
@@ -99,7 +105,7 @@
 
     - name: 'Copiando arquivo de configuração de VirtualHosts para o WordPress'
       copy:
-        src: 'wordpress.conf'
+        src: 'wp.conf'
         dest: '/etc/httpd/conf.d/'
       become: yes
 

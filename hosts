@@ -1,6 +1,6 @@
-[wordpress]
-teste22
+[servidores]
+192.168.122.133
 
-[database]
-teste23
+#[database]
+#teste23
 
