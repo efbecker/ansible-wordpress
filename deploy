@@ -1,2 +1,2 @@
-ansible-playbook wordpress_centOS7.yml
+ansible-playbook -i hosts wordpress_centOS7.yml
 
