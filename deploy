@@ -1,2 +1,3 @@
+#!/bin/bash
 ansible-playbook -i hosts wordpress_centOS7.yml --ask-pass
 
